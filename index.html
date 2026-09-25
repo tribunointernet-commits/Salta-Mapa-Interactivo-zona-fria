@@ -1,0 +1,882 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QUÉ DEPARTAMENTOS DE SALTA CONSERVARÁN EL BENEFICIO DE ZONA FRÍA</title>
+
+  <!-- Leaflet -->
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+    crossorigin=""
+  />
+  <script
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+    crossorigin=""
+  ></script>
+
+  <style>
+    :root{
+      --bg:#f4f7fb;
+      --card:#ffffff;
+      --text:#16324f;
+      --muted:#61758b;
+      --border:#dbe4ee;
+      --shadow:0 12px 30px rgba(16, 39, 64, .08);
+      --keep:#1f7bb6;
+      --keep-soft:#e3f1fb;
+      --remove:#d85b5b;
+      --remove-soft:#fde8e8;
+      --neutral:#cfd9e5;
+      --neutral-dark:#97a7bb;
+    }
+
+    *{box-sizing:border-box}
+
+    body{
+      margin:0;
+      font-family:Arial, Helvetica, sans-serif;
+      background:linear-gradient(180deg,#eef4fa 0%, #f8fbfe 100%);
+      color:var(--text);
+    }
+
+    .container{
+      width:100%;
+      max-width:1320px;
+      margin:0 auto;
+      padding:24px;
+    }
+
+    .hero{
+      background:var(--card);
+      border:1px solid var(--border);
+      border-radius:28px;
+      box-shadow:var(--shadow);
+      padding:24px;
+      margin-bottom:18px;
+    }
+
+    .kicker{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:7px 12px;
+      border-radius:999px;
+      background:#eaf4fb;
+      color:#0f6a96;
+      font-size:12px;
+      font-weight:800;
+      letter-spacing:.06em;
+      text-transform:uppercase;
+      margin-bottom:14px;
+    }
+
+    h1{
+      margin:0 0 10px 0;
+      font-size:clamp(28px, 4vw, 44px);
+      line-height:1.04;
+      letter-spacing:-0.03em;
+      text-transform:uppercase;
+    }
+
+    .hero p{
+      margin:0;
+      font-size:16px;
+      line-height:1.6;
+      color:var(--muted);
+      max-width:1050px;
+    }
+
+    .stats{
+      display:grid;
+      grid-template-columns:repeat(3, minmax(0,1fr));
+      gap:14px;
+      margin-top:20px;
+    }
+
+    .stat{
+      border:1px solid var(--border);
+      background:#f9fbfe;
+      border-radius:20px;
+      padding:16px;
+    }
+
+    .stat strong{
+      display:block;
+      font-size:28px;
+      line-height:1;
+      margin-bottom:8px;
+    }
+
+    .stat span{
+      color:var(--muted);
+      font-size:14px;
+      line-height:1.45;
+    }
+
+    .layout{
+      display:grid;
+      grid-template-columns:1.3fr .9fr;
+      gap:18px;
+    }
+
+    .card{
+      background:var(--card);
+      border:1px solid var(--border);
+      border-radius:28px;
+      box-shadow:var(--shadow);
+      overflow:hidden;
+    }
+
+    .card-head{
+      padding:22px 22px 0 22px;
+    }
+
+    .card-title{
+      margin:0;
+      font-size:24px;
+      line-height:1.1;
+    }
+
+    .card-subtitle{
+      margin:8px 0 0 0;
+      color:var(--muted);
+      font-size:14px;
+      line-height:1.5;
+    }
+
+    .map-tools{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      padding:16px 22px 0 22px;
+    }
+
+    .filter-btn{
+      border:none;
+      background:#eef4fa;
+      color:var(--text);
+      border-radius:999px;
+      padding:10px 14px;
+      font-size:13px;
+      font-weight:700;
+      cursor:pointer;
+      transition:.2s ease;
+    }
+
+    .filter-btn.active{
+      background:var(--text);
+      color:#fff;
+    }
+
+    .filter-btn:hover{
+      transform:translateY(-1px);
+    }
+
+    .map-wrap{
+      padding:18px 18px 18px 18px;
+    }
+
+    #map{
+      width:100%;
+      height:760px;
+      border:1px solid var(--border);
+      border-radius:24px;
+      overflow:hidden;
+      background:#f8fbfe;
+    }
+
+    .leaflet-container{
+      font-family:Arial, Helvetica, sans-serif;
+    }
+
+    .legend{
+      display:flex;
+      flex-wrap:wrap;
+      gap:14px;
+      padding:14px 4px 0 4px;
+    }
+
+    .legend-item{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      color:var(--muted);
+      font-size:13px;
+    }
+
+    .legend-swatch{
+      width:14px;
+      height:14px;
+      border-radius:4px;
+      border:1px solid rgba(0,0,0,.08);
+    }
+
+    .legend-keep{background:var(--keep)}
+    .legend-remove{background:var(--remove)}
+    .legend-neutral{background:var(--neutral)}
+
+    .source-note{
+      padding:12px 2px 0 2px;
+      color:var(--muted);
+      font-size:12px;
+      line-height:1.5;
+    }
+
+    .side{
+      padding:20px;
+      display:flex;
+      flex-direction:column;
+      gap:16px;
+    }
+
+    .info-card{
+      border:1px solid var(--border);
+      border-radius:22px;
+      background:#fbfdff;
+      padding:18px;
+    }
+
+    .badge{
+      display:inline-flex;
+      align-items:center;
+      border-radius:999px;
+      padding:7px 11px;
+      font-size:12px;
+      font-weight:800;
+      letter-spacing:.02em;
+      margin-bottom:10px;
+    }
+
+    .badge.keep{
+      background:var(--keep-soft);
+      color:#0f6a96;
+    }
+
+    .badge.remove{
+      background:var(--remove-soft);
+      color:#b53f3f;
+    }
+
+    .badge.neutral{
+      background:#eef3f8;
+      color:#66788d;
+    }
+
+    .info-card h3{
+      margin:0;
+      font-size:28px;
+      line-height:1.05;
+      letter-spacing:-0.02em;
+    }
+
+    .info-card p{
+      margin:10px 0 0 0;
+      color:var(--muted);
+      font-size:15px;
+      line-height:1.6;
+    }
+
+    .list-grid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:16px;
+    }
+
+    .list-box{
+      border:1px solid var(--border);
+      border-radius:22px;
+      background:#fff;
+      padding:16px;
+    }
+
+    .list-head{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      margin-bottom:12px;
+    }
+
+    .list-head h4{
+      margin:0;
+      font-size:16px;
+      line-height:1.2;
+    }
+
+    .pill{
+      min-width:32px;
+      height:32px;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      border-radius:999px;
+      font-size:13px;
+      font-weight:800;
+    }
+
+    .pill.keep{
+      background:var(--keep-soft);
+      color:#0f6a96;
+    }
+
+    .pill.remove{
+      background:var(--remove-soft);
+      color:#b53f3f;
+    }
+
+    .list{
+      list-style:none;
+      padding:0;
+      margin:0;
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+    }
+
+    .list button{
+      width:100%;
+      text-align:left;
+      border:1px solid var(--border);
+      background:#fff;
+      color:var(--text);
+      border-radius:14px;
+      padding:11px 12px;
+      font-size:14px;
+      font-weight:700;
+      cursor:pointer;
+      transition:.18s ease;
+    }
+
+    .list button:hover{
+      transform:translateY(-1px);
+      background:#f8fbff;
+    }
+
+    .list button.active{
+      border-color:#122f4d;
+      box-shadow:0 0 0 2px rgba(18,47,77,.06);
+    }
+
+    .note{
+      border-top:1px solid var(--border);
+      padding-top:14px;
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.55;
+    }
+
+    .loading,
+    .error-box{
+      padding:18px;
+      margin-top:14px;
+      border-radius:18px;
+      font-size:14px;
+      line-height:1.5;
+    }
+
+    .loading{
+      background:#f6fbff;
+      border:1px solid #dbe9f6;
+      color:#45637f;
+    }
+
+    .error-box{
+      background:#fff5f5;
+      border:1px solid #f1c7c7;
+      color:#9e4040;
+      display:none;
+    }
+
+    .leaflet-popup-content{
+      margin:10px 12px;
+      font-size:13px;
+      line-height:1.45;
+    }
+
+    @media (max-width: 1080px){
+      .layout{
+        grid-template-columns:1fr;
+      }
+
+      #map{
+        height:640px;
+      }
+    }
+
+    @media (max-width: 760px){
+      .container{
+        padding:16px;
+      }
+
+      .stats{
+        grid-template-columns:1fr;
+      }
+
+      .list-grid{
+        grid-template-columns:1fr;
+      }
+
+      #map{
+        height:520px;
+      }
+
+      .hero{
+        padding:20px 18px;
+      }
+
+      .card-head{
+        padding:18px 18px 0 18px;
+      }
+
+      .map-tools{
+        padding:14px 18px 0 18px;
+      }
+
+      .map-wrap,
+      .side{
+        padding:16px;
+      }
+
+      .info-card h3{
+        font-size:24px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+
+    <section class="hero">
+      <div class="kicker">zona fría • salta</div>
+      <h1>QUÉ DEPARTAMENTOS DE SALTA CONSERVARÁN EL BENEFICIO DE ZONA FRÍA</h1>
+      <p>
+        La modificación de la ley aprobada en el Senado mantiene el beneficio para
+        <strong>Los Andes, La Poma, Santa Victoria e Iruya</strong>.
+        En cambio, dejarían de estar alcanzadas localidades incorporadas en la ampliación de 2021 en
+        <strong>Cafayate, San Carlos, Cachi, Chicoana, La Caldera, La Viña, Rosario de Lerma y Capital</strong>.
+      </p>
+
+      <div class="stats">
+        <div class="stat">
+          <strong>4</strong>
+          <span>departamentos conservarían el beneficio de Zona Fría</span>
+        </div>
+        <div class="stat">
+          <strong>8</strong>
+          <span>departamentos o áreas destacadas dejarían de estar alcanzados</span>
+        </div>
+        <div class="stat">
+          <strong>23</strong>
+          <span>departamentos aparecen en el mapa político real de la provincia</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="layout">
+      <article class="card">
+        <div class="card-head">
+          <h2 class="card-title">Mapa político interactivo de Salta</h2>
+          <p class="card-subtitle">
+            Hacé clic sobre un departamento para ver el detalle. El mapa utiliza la división política departamental.
+          </p>
+        </div>
+
+        <div class="map-tools">
+          <button class="filter-btn active" data-filter="all">Ver todo</button>
+          <button class="filter-btn" data-filter="keep">Conservan Zona Fría</button>
+          <button class="filter-btn" data-filter="remove">Dejan de ser Zona Fría</button>
+        </div>
+
+        <div class="map-wrap">
+          <div id="map"></div>
+
+          <div class="loading" id="loadingBox">
+            Cargando mapa político de los departamentos de Salta...
+          </div>
+
+          <div class="error-box" id="errorBox">
+            No se pudo cargar la cartografía en este momento. Si querés evitar dependencias externas, podés descargar el GeoJSON de departamentos y embeberlo localmente en el mismo archivo.
+          </div>
+
+          <div class="legend">
+            <span class="legend-item"><span class="legend-swatch legend-keep"></span> Conservan el beneficio</span>
+            <span class="legend-item"><span class="legend-swatch legend-remove"></span> Dejan de estar incluidos</span>
+            <span class="legend-item"><span class="legend-swatch legend-neutral"></span> Resto de departamentos</span>
+          </div>
+
+          <div class="source-note">
+            Fuente cartográfica: <strong>Instituto Geográfico Nacional (IGN)</strong>, capa oficial de departamentos. Visualización periodística adaptada para esta cobertura.
+          </div>
+        </div>
+      </article>
+
+      <aside class="card">
+        <div class="side">
+          <div class="info-card" id="infoCard">
+            <span class="badge neutral" id="infoBadge">Departamento</span>
+            <h3 id="infoTitle">Salta</h3>
+            <p id="infoText">
+              Seleccioná un departamento en el mapa para ver si conserva el beneficio, si dejaría de estar alcanzado o si no forma parte del grupo destacado en esta nota.
+            </p>
+          </div>
+
+          <div class="list-grid">
+            <div class="list-box">
+              <div class="list-head">
+                <h4>Conservan Zona Fría</h4>
+                <span class="pill keep">4</span>
+              </div>
+              <ul class="list" id="keepList"></ul>
+            </div>
+
+            <div class="list-box">
+              <div class="list-head">
+                <h4>Dejan de ser Zona Fría</h4>
+                <span class="pill remove">8</span>
+              </div>
+              <ul class="list" id="removeList"></ul>
+            </div>
+          </div>
+
+          <div class="note">
+            <strong>Aclaración editorial:</strong> en esta visualización se resaltan los departamentos mencionados en la cobertura. En el caso de
+            <strong>Capital</strong>, corresponde al departamento donde se ubica la ciudad de Salta.
+          </div>
+        </div>
+      </aside>
+    </section>
+  </div>
+
+  <script>
+    // ===============================
+    // DATOS DESTACADOS
+    // ===============================
+    const KEEP = [
+      "Los Andes",
+      "La Poma",
+      "Santa Victoria",
+      "Iruya"
+    ];
+
+    const REMOVE = [
+      "Cafayate",
+      "San Carlos",
+      "Cachi",
+      "Chicoana",
+      "La Caldera",
+      "La Viña",
+      "Rosario de Lerma",
+      "Capital"
+    ];
+
+    const DESCRIPTIONS = {
+      "Los Andes": "Conservaría el beneficio de Zona Fría según la modificación de la ley aprobada en el Senado.",
+      "La Poma": "Figura entre los departamentos que mantendrían el beneficio de Zona Fría.",
+      "Santa Victoria": "Seguiría incluida dentro del esquema de Zona Fría.",
+      "Iruya": "También conservaría el beneficio dentro del nuevo esquema.",
+      "Cafayate": "Se encuentra entre las jurisdicciones que dejarían de estar alcanzadas por la ampliación previa.",
+      "San Carlos": "Dejaría de estar comprendido dentro de la ampliación incorporada en 2021.",
+      "Cachi": "Figura entre las jurisdicciones que dejarían de estar alcanzadas.",
+      "Chicoana": "Forma parte del grupo destacado que dejaría de estar incluido.",
+      "La Caldera": "También dejaría de estar incluida dentro del régimen de Zona Fría.",
+      "La Viña": "Dejaría de estar comprendida en el beneficio.",
+      "Rosario de Lerma": "Integra la lista de jurisdicciones que perderían el alcance de la ampliación.",
+      "Capital": "El departamento Capital, donde se ubica la ciudad de Salta, dejaría de estar comprendido en el beneficio.",
+    };
+
+    // ===============================
+    // HELPERS
+    // ===============================
+    function normalizeName(str = "") {
+      return str
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/\s+/g, " ")
+        .trim()
+        .toLowerCase();
+    }
+
+    const keepSet = new Set(KEEP.map(normalizeName));
+    const removeSet = new Set(REMOVE.map(normalizeName));
+
+    function getStatus(name) {
+      const n = normalizeName(name);
+      if (keepSet.has(n)) return "keep";
+      if (removeSet.has(n)) return "remove";
+      return "neutral";
+    }
+
+    function getStatusLabel(status) {
+      if (status === "keep") return "Conserva el beneficio";
+      if (status === "remove") return "Deja de ser Zona Fría";
+      return "Departamento";
+    }
+
+    function getStatusText(name, status) {
+      if (DESCRIPTIONS[name]) return DESCRIPTIONS[name];
+      if (status === "neutral") {
+        return "Este departamento no forma parte del grupo destacado en esta infografía sobre la modificación del régimen de Zona Fría.";
+      }
+      return "Información disponible en la visualización.";
+    }
+
+    function styleByStatus(status, dimmed = false) {
+      const base = {
+        weight: 1.2,
+        color: "#ffffff",
+        fillOpacity: dimmed ? 0.20 : 0.88
+      };
+
+      if (status === "keep") {
+        return { ...base, fillColor: getComputedStyle(document.documentElement).getPropertyValue('--keep').trim() };
+      }
+      if (status === "remove") {
+        return { ...base, fillColor: getComputedStyle(document.documentElement).getPropertyValue('--remove').trim() };
+      }
+      return { ...base, fillColor: getComputedStyle(document.documentElement).getPropertyValue('--neutral').trim() };
+    }
+
+    // ===============================
+    // UI REFERENCES
+    // ===============================
+    const keepList = document.getElementById("keepList");
+    const removeList = document.getElementById("removeList");
+    const infoBadge = document.getElementById("infoBadge");
+    const infoTitle = document.getElementById("infoTitle");
+    const infoText = document.getElementById("infoText");
+    const loadingBox = document.getElementById("loadingBox");
+    const errorBox = document.getElementById("errorBox");
+    const filterButtons = document.querySelectorAll(".filter-btn");
+
+    function setInfo(name, status) {
+      infoTitle.textContent = name;
+      infoText.textContent = getStatusText(name, status);
+      infoBadge.textContent = getStatusLabel(status);
+      infoBadge.className = "badge " + (status || "neutral");
+    }
+
+    function buildLists() {
+      keepList.innerHTML = "";
+      removeList.innerHTML = "";
+
+      KEEP.forEach(name => {
+        const li = document.createElement("li");
+        const btn = document.createElement("button");
+        btn.textContent = name;
+        btn.dataset.name = name;
+        btn.addEventListener("click", () => focusDepartmentByName(name));
+        li.appendChild(btn);
+        keepList.appendChild(li);
+      });
+
+      REMOVE.forEach(name => {
+        const li = document.createElement("li");
+        const btn = document.createElement("button");
+        btn.textContent = name;
+        btn.dataset.name = name;
+        btn.addEventListener("click", () => focusDepartmentByName(name));
+        li.appendChild(btn);
+        removeList.appendChild(li);
+      });
+    }
+
+    buildLists();
+
+    // ===============================
+    // MAP
+    // ===============================
+    const map = L.map("map", {
+      zoomControl: true,
+      scrollWheelZoom: true,
+      attributionControl: true
+    });
+
+    map.attributionControl.setPrefix(false);
+    map.setView([-24.8, -65.8], 7);
+
+    // Fondo muy suave
+    const bgPane = map.createPane("bgPane");
+    bgPane.style.zIndex = 200;
+
+    let departmentLayer = null;
+    let currentFilter = "all";
+    let selectedLayer = null;
+    const nameToLayer = new Map();
+
+    function updateListActive(name) {
+      document.querySelectorAll(".list button").forEach(btn => {
+        btn.classList.toggle("active", btn.dataset.name === name);
+      });
+    }
+
+    function resetSelectionStyles() {
+      if (!departmentLayer) return;
+      departmentLayer.eachLayer(layer => {
+        const deptName = layer.feature.properties["deptos.FNA"] || layer.feature.properties.FNA || layer.feature.properties.nombre || "";
+        const status = getStatus(deptName);
+        const dimmed = currentFilter !== "all" && status !== currentFilter;
+        layer.setStyle(styleByStatus(status, dimmed));
+      });
+      selectedLayer = null;
+      updateListActive("");
+    }
+
+    function highlightLayer(layer) {
+      const props = layer.feature.properties || {};
+      const deptName = props["deptos.FNA"] || props.FNA || props.nombre || "Departamento";
+      const status = getStatus(deptName);
+
+      resetSelectionStyles();
+
+      layer.setStyle({
+        weight: 3,
+        color: "#102740",
+        fillOpacity: 0.95
+      });
+
+      if (!L.Browser.ie && !L.Browser.opera && !L.Browser.edge) {
+        layer.bringToFront();
+      }
+
+      selectedLayer = layer;
+      setInfo(deptName, status);
+      updateListActive(deptName);
+    }
+
+    function applyFilter(filter) {
+      currentFilter = filter;
+
+      filterButtons.forEach(btn => {
+        btn.classList.toggle("active", btn.dataset.filter === filter);
+      });
+
+      if (!departmentLayer) return;
+
+      departmentLayer.eachLayer(layer => {
+        const props = layer.feature.properties || {};
+        const deptName = props["deptos.FNA"] || props.FNA || props.nombre || "";
+        const status = getStatus(deptName);
+        const dimmed = filter !== "all" && status !== filter;
+        layer.setStyle(styleByStatus(status, dimmed));
+      });
+
+      document.querySelectorAll(".list button").forEach(btn => {
+        const status = getStatus(btn.dataset.name);
+        btn.style.opacity = (filter === "all" || status === filter) ? "1" : ".35";
+      });
+
+      if (selectedLayer) {
+        highlightLayer(selectedLayer);
+      }
+    }
+
+    filterButtons.forEach(btn => {
+      btn.addEventListener("click", () => applyFilter(btn.dataset.filter));
+    });
+
+    function focusDepartmentByName(name) {
+      const key = normalizeName(name);
+      const layer = nameToLayer.get(key);
+      if (!layer) return;
+
+      highlightLayer(layer);
+      map.fitBounds(layer.getBounds(), { padding: [30, 30] });
+
+      const props = layer.feature.properties || {};
+      const deptName = props["deptos.FNA"] || props.FNA || props.nombre || name;
+      const status = getStatus(deptName);
+
+      layer.openPopup();
+      setInfo(deptName, status);
+    }
+
+    // ===============================
+    // CARGA DE CARTOGRAFÍA OFICIAL
+    // Fuente: IGN - capa Departamento
+    // ===============================
+    const geojsonUrl =
+      "https://ide.ign.gob.ar/geoservicios/rest/services/ANIDA/basicas/MapServer/4/query?where=1%3D1&outFields=*&returnGeometry=true&outSR=4326&f=geojson";
+
+    fetch(geojsonUrl)
+      .then(response => {
+        if (!response.ok) throw new Error("No se pudo descargar el GeoJSON");
+        return response.json();
+      })
+      .then(data => {
+        // Filtrar solo departamentos de Salta por código INDEC provincial 66
+        const saltaFeatures = (data.features || []).filter(f => {
+          const props = f.properties || {};
+          const indec = String(props["deptos.IN1"] || props.IN1 || "");
+          return indec.startsWith("66");
+        });
+
+        const saltaGeojson = {
+          type: "FeatureCollection",
+          features: saltaFeatures
+        };
+
+        departmentLayer = L.geoJSON(saltaGeojson, {
+          style: feature => {
+            const props = feature.properties || {};
+            const deptName = props["deptos.FNA"] || props.FNA || props.nombre || "";
+            const status = getStatus(deptName);
+            return styleByStatus(status, false);
+          },
+          onEachFeature: (feature, layer) => {
+            const props = feature.properties || {};
+            const deptName = props["deptos.FNA"] || props.FNA || props.nombre || "Departamento";
+            const status = getStatus(deptName);
+
+            nameToLayer.set(normalizeName(deptName), layer);
+
+            layer.bindTooltip(deptName, {
+              sticky: true,
+              direction: "auto"
+            });
+
+            layer.bindPopup(`
+              <strong>${deptName}</strong><br>
+              ${getStatusLabel(status)}<br><br>
+              ${getStatusText(deptName, status)}
+            `);
+
+            layer.on("mouseover", function() {
+              if (selectedLayer !== layer) {
+                layer.setStyle({
+                  weight: 2.2,
+                  color: "#24425f"
+                });
+              }
+            });
+
+            layer.on("mouseout", function() {
+              if (selectedLayer !== layer) {
+                const dimmed = currentFilter !== "all" && status !== currentFilter;
+                layer.setStyle(styleByStatus(status, dimmed));
+              }
+            });
+
+            layer.on("click", function() {
+              highlightLayer(layer);
+            });
+          }
+        }).addTo(map);
+
+        map.fitBounds(departmentLayer.getBounds(), { padding: [20, 20] });
+
+        loadingBox.style.display = "none";
+        applyFilter("all");
+        setInfo("Salta", "neutral");
+      })
+      .catch(err => {
+        console.error(err);
+        loadingBox.style.display = "none";
+        errorBox.style.display = "block";
+      });
+  </script>
+</body>
+</html>
